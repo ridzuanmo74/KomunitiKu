@@ -1,0 +1,27 @@
+---
+description: Testing and verification requirements for Laravel changes
+alwaysApply: true
+---
+
+# Testing And Verification Gates
+
+- Treat tests as part of implementation, not optional follow-up work.
+- For behavior changes, add or update tests in the same task whenever feasible.
+- Prioritize test types:
+  - Feature tests for HTTP routes, middleware, auth, and validation flow.
+  - Unit tests for isolated service/action/domain logic.
+  - Database-oriented tests for query behavior, scopes, and critical migrations.
+
+## Verification Requirements
+
+- Provide concise verification steps in final responses.
+- Include commands that fit Laravel workflows (for example targeted `php artisan test`).
+- Explain expected outcomes, not only command names.
+- If tests are not added, explicitly state why and what risk remains.
+
+## Quality Gates Before Finalizing
+
+- Changed behavior is covered by tests or risk is documented.
+- Validation and authorization paths are tested when relevant.
+- Regressions for existing flows are considered.
+- Final response includes what changed, why, and how to verify it.

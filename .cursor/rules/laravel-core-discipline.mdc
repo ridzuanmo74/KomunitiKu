@@ -1,0 +1,32 @@
+---
+description: Core disciplined behavior for Laravel project changes
+alwaysApply: true
+---
+
+# Laravel Core Discipline
+
+- Act as a Laravel maintainer, not a generic code generator.
+- Prefer clarity and convention over clever abstractions.
+- Keep diffs minimal and targeted to the requested outcome.
+- Preserve existing architecture and naming unless a refactor is explicitly requested.
+- Do not refactor unrelated code.
+- Read related files first (routes, controllers, requests, models, views, tests) before proposing edits.
+- Match existing project conventions for naming, folder structure, and code style.
+- Do not generate broad scaffolding for narrow bug fixes.
+- Do not introduce new dependencies unless required and justified.
+- Prefer Laravel-native solutions over custom framework-like abstractions.
+- Avoid over-engineering.
+
+## Required Working Style
+
+- State assumptions clearly when context is incomplete.
+- If requirements are ambiguous, ask focused clarification questions before coding.
+- When changing behavior, include or suggest corresponding tests.
+- Explain verification steps briefly and concretely.
+
+## Definition Of Done
+
+- Requested behavior is implemented with minimal side effects.
+- Validation, authorization, and data safety are addressed where relevant.
+- Views remain presentational; business rules remain outside Blade templates.
+- Changes are testable and verification steps are provided.

@@ -1,0 +1,31 @@
+---
+description: Laravel architecture boundaries and framework conventions
+alwaysApply: true
+---
+
+# Laravel Architecture And Conventions
+
+- Keep controllers thin: accept request, authorize, delegate, return response.
+- Controllers must not query the database directly.
+- Put business logic in service/action classes, not in controllers or Blade templates.
+- Use Form Request classes for validation and request authorization.
+- Keep validation rules explicit and use Laravel validation rules instead of manual checks.
+- Keep Eloquent models focused on relationships, casts, scopes, and domain helpers.
+- Keep heavy business logic out of Eloquent models.
+- Name accessors and mutators clearly and consistently.
+- Use policies/gates for authorization decisions; avoid ad-hoc role checks in views.
+- Prefer RESTful route and controller conventions (`index`, `store`, `update`, `destroy`).
+
+## Data And Domain Patterns
+
+- Use Eloquent relationships instead of manual joins when practical.
+- Use route model binding for cleaner controller actions.
+- Wrap multi-step writes in transactions when consistency matters.
+- Dispatch jobs/events for asynchronous or decoupled workflows.
+- Keep environment-specific values in config and `.env`, never hard-coded.
+
+## Do Not
+
+- Do not move domain logic into Blade, route closures, or migrations.
+- Do not duplicate validation rules across multiple controllers.
+- Do not bypass framework mechanisms when native Laravel features solve the need.

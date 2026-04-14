@@ -1,0 +1,27 @@
+---
+description: Blade and BladeWindUI standards for reusable and accessible UI
+alwaysApply: true
+---
+
+# Blade And BladeWindUI UX Standards
+
+- Prefer BladeWindUI components before writing custom HTML structures.
+- Build reusable Blade components/partials for repeated UI patterns.
+- Keep Blade templates presentational; do not place business logic in views.
+- Keep PHP conditionals in views minimal and readability-focused.
+- Pass prepared data from controllers/services/view models instead of heavy inline conditionals.
+- Use consistent component props, slots, and naming for predictable templates.
+- Prefer named slots for clarity when composing Blade components.
+
+## UX And Accessibility Guardrails
+
+- Every input needs an associated label and clear validation error feedback.
+- Include empty states, loading states, and success/failure messaging.
+- Use semantic HTML structure around BladeWindUI components.
+- Preserve keyboard accessibility and readable focus order.
+
+## Do Not
+
+- Do not duplicate long markup blocks across multiple views.
+- Do not query the database from Blade templates.
+- Do not hide authorization logic in view-only checks when policy checks are required upstream.
