@@ -33,7 +33,7 @@ class RbacSeeder extends Seeder
             ['name' => 'Persatuan B', 'description' => 'Persatuan contoh B', 'is_active' => true]
         );
 
-        $superAdmin = User::firstOrCreate(
+        $superAdmin = User::updateOrCreate(
             ['email' => 'superadmin@komunitiku.test'],
             ['name' => 'Super Admin', 'password' => Hash::make('password')]
         );
@@ -43,7 +43,7 @@ class RbacSeeder extends Seeder
             $associationB->id => ['joined_at' => now()->toDateString(), 'is_active' => true],
         ]);
 
-        $committee = User::firstOrCreate(
+        $committee = User::updateOrCreate(
             ['email' => 'jawatankuasa@komunitiku.test'],
             ['name' => 'Jawatankuasa A', 'password' => Hash::make('password')]
         );
@@ -52,7 +52,7 @@ class RbacSeeder extends Seeder
             $associationA->id => ['joined_at' => now()->toDateString(), 'is_active' => true],
         ]);
 
-        $member = User::firstOrCreate(
+        $member = User::updateOrCreate(
             ['email' => 'ahli@komunitiku.test'],
             ['name' => 'Ahli A', 'password' => Hash::make('password')]
         );

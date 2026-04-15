@@ -2,7 +2,12 @@
 
 namespace App\Providers;
 
+use App\Policies\RolePolicy;
+use App\Support\NavigationMenu;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
+use Spatie\Permission\Models\Role;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -19,6 +24,15 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        Gate::policy(Role::class, RolePolicy::class);
+
+        View::composer('layouts.partials.sidebar', function ($view): void {
+            $user = auth()->user();
+            $items = NavigationMenu::sidebarItems($user);
+            $view->with([
+                'sidebarItems' => $items,
+                'sidebarOpenGroups' => NavigationMenu::sidebarOpenGroups($items),
+            ]);
+        });
     }
 }

@@ -41,6 +41,39 @@ php artisan boost:install
 
 Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
 
+## KomunitiKu Local And Testing Database Safety
+
+To prevent accidental login data loss, this project separates local app data from automated test data.
+
+- Local runtime uses `.env` (database: `komunitikudb`)
+- Test runtime uses `.env.testing` (database: `komunitikudb_testing`)
+
+### Recommended Workflow
+
+1. Prepare / recover local login users:
+
+```bash
+php artisan db:seed --force
+```
+
+2. Reset testing schema only (safe for local app data):
+
+```bash
+php artisan migrate:fresh --env=testing --force
+```
+
+3. Run tests against testing database only:
+
+```bash
+php artisan test --filter=Authentication
+```
+
+### Notes
+
+- Do not point `phpunit.xml` directly to the same database as `.env`.
+- If login accounts are missing in local DB, rerun `php artisan db:seed --force`.
+- Default seeded users from `RbacSeeder` use password `password`.
+
 ## Contributing
 
 Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
