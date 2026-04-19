@@ -55,6 +55,33 @@ class CommitteePortalService
     }
 
     /**
+     * Persatuan untuk halaman senarai ahli; menyokong ?association= dan menyegerakkan sesi super_admin.
+     */
+    public function associationForMembersPage(User $user, ?int $associationQueryId): ?Association
+    {
+        if ($user->isSuperAdmin()) {
+            if ($associationQueryId !== null && $associationQueryId > 0
+                && Association::query()->whereKey($associationQueryId)->exists()) {
+                session([self::ACTIVE_ASSOCIATION_SESSION_KEY => $associationQueryId]);
+
+                return Association::query()->find($associationQueryId);
+            }
+
+            return $this->committeeContextAssociation($user);
+        }
+
+        if ($associationQueryId !== null && $associationQueryId > 0) {
+            if (! $user->belongsToAssociation($associationQueryId)) {
+                abort(403);
+            }
+
+            return Association::query()->find($associationQueryId);
+        }
+
+        return $this->primaryAssociationFor($user);
+    }
+
+    /**
      * @return array{
      *     association: ?Association,
      *     associationList: LengthAwarePaginator<int, Association>,
@@ -181,9 +208,44 @@ class CommitteePortalService
      */
     public function membersForAssociation(Association $association): Collection
     {
-        return $association->users()
+        $members = $association->users()
             ->orderBy('name')
             ->get();
+
+        $stateIds = $members->pluck('pivot.state_id')->filter()->unique()->values();
+        if ($stateIds->isEmpty()) {
+            return $members;
+        }
+
+        $statesById = State::query()->whereIn('id', $stateIds)->get()->keyBy('id');
+        foreach ($members as $user) {
+            $sid = $user->pivot->state_id;
+            if ($sid !== null && $statesById->has($sid)) {
+                $user->pivot->setRelation('state', $statesById->get($sid));
+            }
+        }
+
+        return $members;
+    }
+
+    /**
+     * @return array{
+     *     association: ?Association,
+     *     members: Collection<int, User>,
+     *     states: BaseCollection<int, State>
+     * }
+     */
+    public function associationMembersPageContext(User $user, ?int $associationQueryId): array
+    {
+        $association = $this->associationForMembersPage($user, $associationQueryId);
+        $members = $association ? $this->membersForAssociation($association) : collect();
+        $states = State::query()->orderBy('name')->get();
+
+        return [
+            'association' => $association,
+            'members' => $members,
+            'states' => $states,
+        ];
     }
 
     /**

@@ -458,4 +458,139 @@ class AssociationRegistryTest extends TestCase
             ]))
             ->assertSessionHasErrors('phone');
     }
+
+    public function test_super_admin_can_view_association_members_for_selected_association(): void
+    {
+        $admin = User::factory()->create();
+        $admin->assignRole('super_admin');
+
+        $association = Association::create(['name' => 'With Members', 'code' => 'WM-001']);
+        $member = User::factory()->create([
+            'name' => 'UjianAhliUnik123',
+            'email' => 'ahli_unik_test@example.com',
+        ]);
+        $member->assignRole('ahli');
+        $member->associations()->attach($association->id, ['membership_no' => 'M-001']);
+
+        $this->actingAs($admin)
+            ->get(route('committee.associations.members', ['association' => $association->id]))
+            ->assertOk()
+            ->assertSee('UjianAhliUnik123', false)
+            ->assertSee('ahli_unik_test@example.com', false)
+            ->assertSee(__('Lihat maklumat ahli'), false);
+    }
+
+    public function test_jawatankuasa_cannot_view_members_of_unaffiliated_association(): void
+    {
+        $committee = User::factory()->create();
+        $committee->assignRole('jawatankuasa');
+
+        $mine = Association::create(['name' => 'My Club', 'code' => 'MC-001']);
+        $other = Association::create(['name' => 'Other Club', 'code' => 'OC-001']);
+        $committee->associations()->attach($mine->id);
+
+        $this->actingAs($committee)
+            ->get(route('committee.associations.members', ['association' => $other->id]))
+            ->assertForbidden();
+    }
+
+    public function test_jawatankuasa_can_update_member_pivot_for_their_association(): void
+    {
+        $committee = User::factory()->create();
+        $committee->assignRole('jawatankuasa');
+
+        $association = Association::create(['name' => 'Club Patch', 'code' => 'CL-PATCH-1']);
+        $committee->associations()->attach($association->id);
+
+        $member = User::factory()->create();
+        $member->assignRole('ahli');
+        $member->associations()->attach($association->id, ['membership_no' => 'OLD']);
+
+        $state = State::query()->firstOrFail();
+
+        $this->actingAs($committee)
+            ->patch(route('committee.associations.members.update', [
+                'user' => $member->id,
+                'association' => $association->id,
+            ]), [
+                'membership_no' => 'NEW-001',
+                'address' => 'Jalan Baru 1',
+                'postcode' => '50000',
+                'city' => 'Shah Alam',
+                'state_id' => (string) $state->id,
+                'latitude' => '3.0738',
+                'longitude' => '101.5183',
+                'property_relationship' => 'owner',
+                'is_voting_eligible' => '1',
+                'phone' => '012-3456789',
+            ])
+            ->assertRedirect(route('committee.associations.members', ['association' => $association->id]))
+            ->assertSessionHas('status');
+
+        $member->refresh();
+        $pivot = $member->associations()->where('associations.id', $association->id)->first()->pivot;
+        $this->assertSame('NEW-001', $pivot->membership_no);
+        $this->assertSame('Jalan Baru 1', $pivot->address);
+        $this->assertTrue($pivot->is_voting_eligible);
+        $this->assertSame('owner', $pivot->property_relationship);
+        $this->assertSame('0123456789', $pivot->phone);
+    }
+
+    public function test_jawatankuasa_cannot_update_member_not_in_selected_association(): void
+    {
+        $committee = User::factory()->create();
+        $committee->assignRole('jawatankuasa');
+
+        $mine = Association::create(['name' => 'Mine Patch', 'code' => 'M-UP-1']);
+        $other = Association::create(['name' => 'Other Patch', 'code' => 'O-UP-1']);
+        $committee->associations()->attach($mine->id);
+
+        $stranger = User::factory()->create();
+        $stranger->assignRole('ahli');
+        $stranger->associations()->attach($other->id);
+
+        $state = State::query()->firstOrFail();
+
+        $this->actingAs($committee)
+            ->patch(route('committee.associations.members.update', [
+                'user' => $stranger->id,
+                'association' => $mine->id,
+            ]), [
+                'membership_no' => 'X',
+                'address' => 'Alamat ujian',
+                'postcode' => '43000',
+                'state_id' => (string) $state->id,
+                'property_relationship' => 'tenant',
+                'is_voting_eligible' => '0',
+                'phone' => '0123456789',
+            ])
+            ->assertNotFound();
+    }
+
+    public function test_member_update_rejects_invalid_property_relationship(): void
+    {
+        $admin = User::factory()->create();
+        $admin->assignRole('super_admin');
+        $association = Association::create(['name' => 'Assoc Val', 'code' => 'VAL-PR-1']);
+        $member = User::factory()->create();
+        $member->assignRole('ahli');
+        $member->associations()->attach($association->id);
+
+        $state = State::query()->firstOrFail();
+
+        $this->actingAs($admin)
+            ->patch(route('committee.associations.members.update', [
+                'user' => $member->id,
+                'association' => $association->id,
+            ]), [
+                'membership_no' => 'OK',
+                'address' => 'No 1 Jalan Ujian',
+                'postcode' => '40000',
+                'state_id' => (string) $state->id,
+                'property_relationship' => 'landlord',
+                'is_voting_eligible' => '0',
+                'phone' => '0123456789',
+            ])
+            ->assertSessionHasErrors('property_relationship');
+    }
 }

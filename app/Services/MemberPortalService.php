@@ -5,13 +5,13 @@ namespace App\Services;
 use App\Models\Activity;
 use App\Models\Announcement;
 use App\Models\Association;
+use App\Models\AssociationUser;
 use App\Models\Attendance;
 use App\Models\Fee;
 use App\Models\Payment;
 use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Database\Eloquent\Relations\Pivot;
 
 class MemberPortalService
 {
@@ -81,16 +81,22 @@ class MemberPortalService
             ->get();
     }
 
-    public function membershipForActiveAssociation(User $user): ?Pivot
+    public function membershipForActiveAssociation(User $user): ?AssociationUser
     {
         $activeAssociation = $this->activeAssociationFor($user);
         if (! $activeAssociation instanceof Association) {
             return null;
         }
 
-        return $activeAssociation->users()
+        $pivot = $activeAssociation->users()
             ->where('users.id', $user->id)
             ->first()?->pivot;
+
+        if ($pivot !== null && $pivot->state_id !== null) {
+            $pivot->load('state');
+        }
+
+        return $pivot;
     }
 
     /**

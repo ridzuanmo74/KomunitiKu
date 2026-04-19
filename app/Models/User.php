@@ -4,11 +4,11 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Database\Factories\UserFactory;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
@@ -18,7 +18,7 @@ use Spatie\Permission\Traits\HasRoles;
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable, HasRoles;
+    use HasFactory, HasRoles, Notifiable;
 
     /**
      * Get the attributes that should be cast.
@@ -36,7 +36,21 @@ class User extends Authenticatable
     public function associations(): BelongsToMany
     {
         return $this->belongsToMany(Association::class)
-            ->withPivot(['membership_no', 'joined_at', 'is_active'])
+            ->using(AssociationUser::class)
+            ->withPivot([
+                'membership_no',
+                'joined_at',
+                'is_active',
+                'address',
+                'postcode',
+                'city',
+                'state_id',
+                'latitude',
+                'longitude',
+                'property_relationship',
+                'is_voting_eligible',
+                'phone',
+            ])
             ->withTimestamps();
     }
 

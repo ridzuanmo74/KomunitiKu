@@ -80,6 +80,7 @@ Route::middleware('auth')->group(function () {
             Route::prefix('associations')->name('associations.')->group(function () {
                 Route::get('info', [CommitteePortalController::class, 'associationInfo'])->name('info');
                 Route::get('members', [CommitteePortalController::class, 'associationMembers'])->name('members');
+                Route::patch('members/{user}', [CommitteePortalController::class, 'updateAssociationMember'])->name('members.update');
                 Route::get('approvals', [CommitteePortalController::class, 'associationApprovals'])->name('approvals');
             });
         });

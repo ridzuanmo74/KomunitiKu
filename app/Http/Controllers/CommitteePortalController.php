@@ -2,13 +2,21 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\UpdateAssociationMemberRequest;
+use App\Models\Association;
+use App\Models\User;
+use App\Services\AssociationMemberService;
 use App\Services\CommitteePortalService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class CommitteePortalController extends Controller
 {
-    public function __construct(private readonly CommitteePortalService $portalService) {}
+    public function __construct(
+        private readonly CommitteePortalService $portalService,
+        private readonly AssociationMemberService $associationMemberService,
+    ) {}
 
     public function associationInfo(Request $request): View
     {
@@ -27,10 +35,25 @@ class CommitteePortalController extends Controller
 
     public function associationMembers(Request $request): View
     {
-        $association = $this->portalService->committeeContextAssociation($request->user());
-        $members = $association ? $this->portalService->membersForAssociation($association) : collect();
+        $queryId = $request->filled('association') ? (int) $request->query('association') : null;
+        $context = $this->portalService->associationMembersPageContext($request->user(), $queryId);
 
-        return view('committee.associations.members', compact('association', 'members'));
+        return view('committee.associations.members', $context);
+    }
+
+    public function updateAssociationMember(UpdateAssociationMemberRequest $request, User $user): RedirectResponse
+    {
+        $queryId = $request->filled('association') ? (int) $request->query('association') : null;
+        $association = $this->portalService->associationForMembersPage($request->user(), $queryId);
+        abort_unless($association instanceof Association, 404);
+
+        $this->authorize('manageMembers', $association);
+
+        $this->associationMemberService->updateMemberPivot($association, $user, $request->validated());
+
+        return redirect()
+            ->route('committee.associations.members', ['association' => $association->id])
+            ->with('status', __('Maklumat ahli dikemas kini.'));
     }
 
     public function associationApprovals(Request $request): View

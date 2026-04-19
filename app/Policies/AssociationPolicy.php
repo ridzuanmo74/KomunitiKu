@@ -21,6 +21,11 @@ class AssociationPolicy
         return $user->isJawatankuasa() && $user->belongsToAssociation($association->id);
     }
 
+    public function manageMembers(User $user, Association $association): bool
+    {
+        return $this->view($user, $association);
+    }
+
     public function create(User $user): bool
     {
         return $user->isSuperAdmin();

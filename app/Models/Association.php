@@ -44,7 +44,21 @@ class Association extends Model
     public function users(): BelongsToMany
     {
         return $this->belongsToMany(User::class)
-            ->withPivot(['membership_no', 'joined_at', 'is_active'])
+            ->using(AssociationUser::class)
+            ->withPivot([
+                'membership_no',
+                'joined_at',
+                'is_active',
+                'address',
+                'postcode',
+                'city',
+                'state_id',
+                'latitude',
+                'longitude',
+                'property_relationship',
+                'is_voting_eligible',
+                'phone',
+            ])
             ->withTimestamps();
     }
 
