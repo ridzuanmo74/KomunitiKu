@@ -28,6 +28,27 @@ class AssociationRegistryTest extends TestCase
         $this->seed(StateSeeder::class);
     }
 
+    /**
+     * @param  array<string, mixed>  $overrides
+     * @return array<string, mixed>
+     */
+    private function validAssociationStorePayload(array $overrides = []): array
+    {
+        $state = State::query()->firstOrFail();
+
+        return array_merge([
+            'name' => 'Persatuan Ujian Payload',
+            'code' => 'PL-'.substr(str_replace('.', '', uniqid('', true)), 0, 12),
+            'is_active' => '1',
+            'established_date' => '2020-06-01',
+            'address' => 'No 10 Jalan Ujian, Taman Contoh',
+            'postcode' => '40000',
+            'state_id' => $state->id,
+            'phone' => '03-12345678',
+            'official_email' => 'payload@example.test',
+        ], $overrides);
+    }
+
     public function test_super_admin_can_create_and_update_association_with_state_and_coordinates(): void
     {
         $admin = User::factory()->create();
@@ -49,8 +70,8 @@ class AssociationRegistryTest extends TestCase
                 'state_id' => $state->id,
                 'phone' => '03-12345678',
                 'official_email' => 'info@persatuan.test',
-                'latitude' => '3.0738',
-                'longitude' => '101.5183',
+                'latitude' => '3,0738',
+                'longitude' => '101,5183',
             ])
             ->assertRedirect();
 
@@ -67,11 +88,11 @@ class AssociationRegistryTest extends TestCase
                 'is_active' => '0',
                 'ros_registration_number' => 'ROS-999',
                 'established_date' => '2020-01-15',
-                'address' => 'No 2',
+                'address' => 'No 22 Jalan Kemas Kini',
                 'postcode' => '40100',
                 'city' => 'Shah Alam',
                 'state_id' => $state->id,
-                'phone' => '03-999',
+                'phone' => '03-87654321',
                 'official_email' => 'hq@persatuan.test',
                 'latitude' => '',
                 'longitude' => '',
@@ -90,11 +111,11 @@ class AssociationRegistryTest extends TestCase
         $admin->assignRole('super_admin');
 
         $this->actingAs($admin)
-            ->post(route('committee.associations.store'), [
+            ->post(route('committee.associations.store'), $this->validAssociationStorePayload([
                 'name' => 'X',
                 'code' => 'X-001',
                 'state_id' => 999999,
-            ])
+            ]))
             ->assertSessionHasErrors('state_id');
     }
 
@@ -104,12 +125,12 @@ class AssociationRegistryTest extends TestCase
         $admin->assignRole('super_admin');
 
         $this->actingAs($admin)
-            ->post(route('committee.associations.store'), [
+            ->post(route('committee.associations.store'), $this->validAssociationStorePayload([
                 'name' => 'Y',
                 'code' => 'Y-001',
                 'latitude' => '1.5',
                 'longitude' => '',
-            ])
+            ]))
             ->assertSessionHasErrors(['latitude', 'longitude']);
     }
 
@@ -296,5 +317,145 @@ class AssociationRegistryTest extends TestCase
             ->assertOk()
             ->assertSee('CityBetaUnique', false)
             ->assertSee('Beta Club', false);
+    }
+
+    public function test_super_admin_can_view_create_association_form(): void
+    {
+        $admin = User::factory()->create();
+        $admin->assignRole('super_admin');
+
+        $firstState = State::query()->orderBy('name')->firstOrFail();
+
+        $this->actingAs($admin)
+            ->get(route('committee.associations.create'))
+            ->assertOk()
+            ->assertSee(__('Daftar persatuan baharu'), false)
+            ->assertSee(__('Simpan'), false)
+            ->assertSee(__('Nama'), false)
+            ->assertSee(__('Kod'), false)
+            ->assertSee($firstState->name, false);
+    }
+
+    public function test_guest_is_redirected_to_login_when_visiting_create_association_form(): void
+    {
+        $this->get(route('committee.associations.create'))
+            ->assertRedirect(route('login'));
+
+        $this->assertGuest();
+    }
+
+    public function test_super_admin_cannot_store_duplicate_association_code(): void
+    {
+        $admin = User::factory()->create();
+        $admin->assignRole('super_admin');
+
+        Association::create(['name' => 'Existing', 'code' => 'DUP-001']);
+
+        $this->actingAs($admin)
+            ->post(route('committee.associations.store'), $this->validAssociationStorePayload([
+                'name' => 'New Name',
+                'code' => 'DUP-001',
+            ]))
+            ->assertSessionHasErrors('code');
+    }
+
+    public function test_super_admin_cannot_store_without_required_fields(): void
+    {
+        $admin = User::factory()->create();
+        $admin->assignRole('super_admin');
+
+        $this->actingAs($admin)
+            ->post(route('committee.associations.store'), [])
+            ->assertSessionHasErrors([
+                'name',
+                'code',
+                'established_date',
+                'address',
+                'postcode',
+                'state_id',
+                'phone',
+                'official_email',
+            ]);
+    }
+
+    public function test_super_admin_can_store_minimal_association(): void
+    {
+        $admin = User::factory()->create();
+        $admin->assignRole('super_admin');
+
+        $response = $this->actingAs($admin)
+            ->post(route('committee.associations.store'), $this->validAssociationStorePayload([
+                'name' => 'Minimal Persatuan',
+                'code' => 'MIN-001',
+            ]));
+
+        $association = Association::query()->where('code', 'MIN-001')->firstOrFail();
+
+        $response->assertRedirect(route('committee.associations.info', ['association' => $association->id]));
+
+        $this->assertDatabaseHas('associations', [
+            'id' => $association->id,
+            'code' => 'MIN-001',
+            'name' => 'Minimal Persatuan',
+        ]);
+    }
+
+    public function test_super_admin_cannot_store_established_date_after_today(): void
+    {
+        $admin = User::factory()->create();
+        $admin->assignRole('super_admin');
+
+        $this->actingAs($admin)
+            ->post(route('committee.associations.store'), $this->validAssociationStorePayload([
+                'code' => 'FD-'.substr(str_replace('.', '', uniqid('', true)), 0, 10),
+                'established_date' => now()->addDay()->format('Y-m-d'),
+            ]))
+            ->assertSessionHasErrors('established_date');
+    }
+
+    public function test_super_admin_cannot_store_invalid_postcode(): void
+    {
+        $admin = User::factory()->create();
+        $admin->assignRole('super_admin');
+
+        $this->actingAs($admin)
+            ->post(route('committee.associations.store'), $this->validAssociationStorePayload([
+                'code' => 'PC-'.substr(str_replace('.', '', uniqid('', true)), 0, 10),
+                'postcode' => '4000',
+            ]))
+            ->assertSessionHasErrors('postcode');
+
+        $this->actingAs($admin)
+            ->post(route('committee.associations.store'), $this->validAssociationStorePayload([
+                'code' => 'PC-'.substr(str_replace('.', '', uniqid('', true)), 0, 10),
+                'postcode' => 'ABCDE',
+            ]))
+            ->assertSessionHasErrors('postcode');
+    }
+
+    public function test_super_admin_cannot_store_invalid_official_email(): void
+    {
+        $admin = User::factory()->create();
+        $admin->assignRole('super_admin');
+
+        $this->actingAs($admin)
+            ->post(route('committee.associations.store'), $this->validAssociationStorePayload([
+                'code' => 'EM-'.substr(str_replace('.', '', uniqid('', true)), 0, 10),
+                'official_email' => 'not-an-email',
+            ]))
+            ->assertSessionHasErrors('official_email');
+    }
+
+    public function test_super_admin_cannot_store_invalid_phone(): void
+    {
+        $admin = User::factory()->create();
+        $admin->assignRole('super_admin');
+
+        $this->actingAs($admin)
+            ->post(route('committee.associations.store'), $this->validAssociationStorePayload([
+                'code' => 'PH-'.substr(str_replace('.', '', uniqid('', true)), 0, 10),
+                'phone' => '0123456',
+            ]))
+            ->assertSessionHasErrors('phone');
     }
 }

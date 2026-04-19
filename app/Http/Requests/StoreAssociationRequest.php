@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Http\Requests\Concerns\PreparesAssociationRequestInput;
 use App\Models\Association;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -9,6 +10,10 @@ use Illuminate\Validation\Validator;
 
 class StoreAssociationRequest extends FormRequest
 {
+    use PreparesAssociationRequestInput;
+
+    public const MALAYSIAN_PHONE_REGEX = '/^0(1[0-9]|[3-9][0-9])[0-9]{7,9}$/';
+
     public function authorize(): bool
     {
         return $this->user()?->can('create', Association::class) ?? false;
@@ -25,52 +30,35 @@ class StoreAssociationRequest extends FormRequest
             'description' => ['nullable', 'string'],
             'is_active' => ['sometimes', 'boolean'],
             'ros_registration_number' => ['nullable', 'string', 'max:100'],
-            'established_date' => ['nullable', 'date'],
-            'address' => ['nullable', 'string', 'max:5000'],
-            'postcode' => ['nullable', 'string', 'max:20'],
+            'established_date' => ['required', 'date', 'before_or_equal:today'],
+            'address' => ['required', 'string', 'min:5', 'max:5000'],
+            'postcode' => ['required', 'digits:5'],
             'city' => ['nullable', 'string', 'max:255'],
-            'state_id' => ['nullable', 'integer', 'exists:states,id'],
-            'phone' => ['nullable', 'string', 'max:50'],
-            'official_email' => ['nullable', 'email', 'max:255'],
+            'state_id' => ['required', 'integer', 'exists:states,id'],
+            'phone' => ['required', 'string', 'max:50', 'regex:'.self::MALAYSIAN_PHONE_REGEX],
+            'official_email' => ['required', 'email', 'max:255'],
             'latitude' => ['nullable', 'numeric', 'between:-90,90'],
             'longitude' => ['nullable', 'numeric', 'between:-180,180'],
         ];
     }
 
+    public function messages(): array
+    {
+        return [
+            'phone.regex' => __('Format nombor telefon tidak sah. Gunakan format Malaysia (contoh: 0123456789 atau 03-12345678).'),
+            'postcode.digits' => __('Poskod mesti tepat 5 digit nombor.'),
+            'established_date.before_or_equal' => __('Tarikh ditubuhkan tidak boleh melebihi hari ini.'),
+            'address.min' => __('Sila masukkan alamat yang lengkap.'),
+        ];
+    }
+
     protected function prepareForValidation(): void
     {
-        $this->merge([
-            'is_active' => $this->normalizeIsActiveFromForm(),
-        ]);
-
-        foreach (['latitude', 'longitude'] as $field) {
-            if ($this->has($field) && $this->input($field) === '') {
-                $this->merge([$field => null]);
-            }
-        }
+        $this->mergeNormalizedAssociationPayload();
     }
 
     public function withValidator(Validator $validator): void
     {
-        $validator->after(function (Validator $validator): void {
-            $lat = $validator->getData()['latitude'] ?? null;
-            $lng = $validator->getData()['longitude'] ?? null;
-            $latPresent = $lat !== null && $lat !== '';
-            $lngPresent = $lng !== null && $lng !== '';
-            if ($latPresent xor $lngPresent) {
-                $validator->errors()->add('latitude', __('Latitud dan longitud mesti kedua-duanya diisi atau dibiarkan kosong.'));
-                $validator->errors()->add('longitude', __('Latitud dan longitud mesti kedua-duanya diisi atau dibiarkan kosong.'));
-            }
-        });
-    }
-
-    private function normalizeIsActiveFromForm(): bool
-    {
-        $v = $this->input('is_active');
-        if (is_array($v)) {
-            return in_array('1', $v, true) || in_array(1, $v, true);
-        }
-
-        return $v === '1' || $v === 1 || $v === true;
+        $this->validateAssociationLatitudeLongitudePair($validator);
     }
 }
