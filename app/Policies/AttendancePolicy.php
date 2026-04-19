@@ -19,19 +19,11 @@ class AttendancePolicy
 
     public function create(User $user, int $associationId): bool
     {
-        if ($user->isSuperAdmin()) {
-            return true;
-        }
-
         return $user->isAhli() && $user->belongsToAssociation($associationId);
     }
 
     public function update(User $user, Attendance $attendance): bool
     {
-        if ($user->isSuperAdmin()) {
-            return true;
-        }
-
         return $user->id === $attendance->user_id
             && $user->isAhli()
             && $user->belongsToAssociation($attendance->activity->association_id);

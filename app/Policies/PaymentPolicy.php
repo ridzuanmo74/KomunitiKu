@@ -19,10 +19,6 @@ class PaymentPolicy
 
     public function create(User $user, int $associationId): bool
     {
-        if ($user->isSuperAdmin()) {
-            return true;
-        }
-
         return $user->isAhli() && $user->belongsToAssociation($associationId);
     }
 

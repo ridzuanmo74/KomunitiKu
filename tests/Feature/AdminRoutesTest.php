@@ -47,7 +47,9 @@ class AdminRoutesTest extends TestCase
             ->assertOk()
             ->assertSee(__('Administration'), false)
             ->assertSee(route('admin.users.index'), false)
-            ->assertSee(route('admin.roles.index'), false);
+            ->assertSee(route('admin.roles.index'), false)
+            ->assertDontSee(__('Persatuan Saya'), false)
+            ->assertDontSee(__('Pengurusan Yuran'), false);
     }
 
     public function test_jawatankuasa_dashboard_does_not_include_administration_sidebar(): void
@@ -58,7 +60,8 @@ class AdminRoutesTest extends TestCase
         $this->actingAs($user)
             ->get(route('dashboard'))
             ->assertOk()
-            ->assertDontSee(__('Administration'), false);
+            ->assertDontSee(__('Administration'), false)
+            ->assertSee(__('Pengurusan Yuran'), false);
     }
 
     public function test_jawatankuasa_cannot_access_admin_routes(): void

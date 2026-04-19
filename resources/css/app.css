@@ -15,3 +15,33 @@
         display: none !important;
     }
 }
+
+@layer components {
+    .kk-card {
+        @apply rounded-lg border border-kk-border bg-kk-surface shadow-sm;
+    }
+
+    .kk-page-header-shell {
+        @apply mb-4 overflow-hidden rounded-lg border border-kk-border shadow-md;
+    }
+
+    .kk-page-header-band {
+        @apply bg-gradient-to-r from-kk-nav-from to-kk-nav-to px-4 py-3 text-kk-nav-fg sm:px-5;
+    }
+
+    .kk-page-header-band h2 {
+        @apply text-lg font-semibold leading-tight !text-white;
+    }
+
+    .kk-modal-backdrop {
+        @apply bg-teal-950/55;
+    }
+
+    .kk-modal-surface {
+        @apply rounded-lg border border-kk-border bg-kk-surface shadow-2xl ring-1 ring-kk-border/40;
+    }
+
+    .kk-modal-accent-bar {
+        @apply h-1 bg-gradient-to-r from-kk-modal-from to-kk-modal-to;
+    }
+}

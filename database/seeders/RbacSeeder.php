@@ -38,10 +38,6 @@ class RbacSeeder extends Seeder
             ['name' => 'Super Admin', 'password' => Hash::make('password')]
         );
         $superAdmin->syncRoles(['super_admin']);
-        $superAdmin->associations()->syncWithoutDetaching([
-            $associationA->id => ['joined_at' => now()->toDateString(), 'is_active' => true],
-            $associationB->id => ['joined_at' => now()->toDateString(), 'is_active' => true],
-        ]);
 
         $committee = User::updateOrCreate(
             ['email' => 'jawatankuasa@komunitiku.test'],

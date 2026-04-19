@@ -2,9 +2,10 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Model;
 
 class Association extends Model
 {
@@ -13,13 +14,31 @@ class Association extends Model
         'code',
         'description',
         'is_active',
+        'ros_registration_number',
+        'established_date',
+        'address',
+        'postcode',
+        'city',
+        'state_id',
+        'phone',
+        'official_email',
+        'latitude',
+        'longitude',
     ];
 
     protected function casts(): array
     {
         return [
             'is_active' => 'boolean',
+            'established_date' => 'date',
+            'latitude' => 'decimal:8',
+            'longitude' => 'decimal:8',
         ];
+    }
+
+    public function state(): BelongsTo
+    {
+        return $this->belongsTo(State::class);
     }
 
     public function users(): BelongsToMany

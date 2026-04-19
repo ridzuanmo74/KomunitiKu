@@ -33,8 +33,6 @@ class RbacAccessTest extends TestCase
         $associationA = Association::create(['name' => 'A', 'code' => 'A-001']);
         $associationB = Association::create(['name' => 'B', 'code' => 'B-001']);
 
-        $superAdmin->associations()->attach([$associationA->id, $associationB->id]);
-
         $this->actingAs($superAdmin)
             ->postJson('/rbac/activities', [
                 'association_id' => $associationB->id,
@@ -154,6 +152,34 @@ class RbacAccessTest extends TestCase
         $this->actingAs($ahli)
             ->postJson('/rbac/attendances', [
                 'activity_id' => $activityB->id,
+            ])
+            ->assertForbidden();
+    }
+
+    public function test_super_admin_cannot_record_attendance_or_payment_via_rbac(): void
+    {
+        $superAdmin = User::factory()->create();
+        $superAdmin->assignRole('super_admin');
+
+        $association = Association::create(['name' => 'A', 'code' => 'A-006']);
+        $activity = Activity::create([
+            'association_id' => $association->id,
+            'title' => 'Aktiviti',
+            'activity_date' => now()->addDay(),
+            'created_by' => $superAdmin->id,
+        ]);
+
+        $this->actingAs($superAdmin)
+            ->postJson('/rbac/attendances', [
+                'activity_id' => $activity->id,
+            ])
+            ->assertForbidden();
+
+        $this->actingAs($superAdmin)
+            ->postJson('/rbac/payments', [
+                'association_id' => $association->id,
+                'amount' => 10.00,
+                'reference' => 'PAY-SA',
             ])
             ->assertForbidden();
     }

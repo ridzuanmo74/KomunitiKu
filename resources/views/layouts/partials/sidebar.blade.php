@@ -7,9 +7,9 @@
             <a
                 href="{{ route($item['route']) }}"
                 @class([
-                    'block rounded-md px-2.5 py-1.5 font-medium',
-                    'bg-gray-100 text-gray-900' => request()->routeIs($item['route_is'] ?? ''),
-                    'text-gray-700 hover:bg-gray-50 hover:text-gray-900' => ! request()->routeIs($item['route_is'] ?? ''),
+                    'block rounded-md px-2.5 py-1.5 font-medium transition-colors',
+                    'border-l-2 border-kk-accent bg-kk-sidebar-active text-kk-sidebar-text' => request()->routeIs($item['route_is'] ?? ''),
+                    'border-l-2 border-transparent text-kk-sidebar-text hover:bg-kk-sidebar-hover' => ! request()->routeIs($item['route_is'] ?? ''),
                 ])
             >
                 {{ __($item['label']) }}
@@ -23,14 +23,14 @@
                 <button
                     type="button"
                     id="sidebar-group-trigger-{{ $groupId }}"
-                    class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 hover:bg-gray-50 hover:text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1"
+                    class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-left text-xs font-semibold uppercase tracking-wider text-kk-sidebar-muted hover:bg-kk-sidebar-hover hover:text-kk-sidebar-text focus:outline-none focus:ring-2 focus:ring-kk-accent/40 focus:ring-offset-1 focus:ring-offset-kk-sidebar"
                     :aria-expanded="open['{{ $groupId }}']"
                     aria-controls="sidebar-group-{{ $groupId }}"
                     @click="open['{{ $groupId }}'] = ! open['{{ $groupId }}']"
                 >
-                    <span class="{{ $groupActive ? 'text-gray-900' : '' }}">{{ __($item['label']) }}</span>
+                    <span class="{{ $groupActive ? 'text-kk-sidebar-text' : '' }}">{{ __($item['label']) }}</span>
                     <svg
-                        class="h-4 w-4 shrink-0 text-gray-400 transition-transform duration-150"
+                        class="h-4 w-4 shrink-0 text-kk-sidebar-muted transition-transform duration-150"
                         :class="{ 'rotate-180': open['{{ $groupId }}'] }"
                         xmlns="http://www.w3.org/2000/svg"
                         fill="none"
@@ -47,7 +47,7 @@
                     x-show="open['{{ $groupId }}']"
                     id="sidebar-group-{{ $groupId }}"
                     role="list"
-                    class="mt-1 space-y-0.5 border-l border-gray-200 py-0.5 pl-3 ml-2"
+                    class="ml-2 mt-1 space-y-0.5 border-l border-kk-sidebar-border py-0.5 pl-3"
                 >
                     @foreach ($item['children'] as $child)
                         @if (($child['type'] ?? '') === 'link')
@@ -55,9 +55,9 @@
                                 <a
                                     href="{{ route($child['route']) }}"
                                     @class([
-                                        'block rounded-md py-1.5 pl-1 pr-2 text-sm font-medium',
-                                        'bg-gray-100 text-gray-900' => request()->routeIs($child['route_is'] ?? ''),
-                                        'text-gray-700 hover:bg-gray-50 hover:text-gray-900' => ! request()->routeIs($child['route_is'] ?? ''),
+                                        'block rounded-md py-1.5 pl-1 pr-2 text-sm font-medium transition-colors',
+                                        'bg-kk-sidebar-active text-kk-sidebar-text ring-1 ring-kk-border/60' => request()->routeIs($child['route_is'] ?? ''),
+                                        'text-kk-sidebar-text hover:bg-kk-sidebar-hover' => ! request()->routeIs($child['route_is'] ?? ''),
                                     ])
                                 >
                                     {{ __($child['label']) }}
