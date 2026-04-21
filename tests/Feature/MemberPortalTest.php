@@ -45,6 +45,7 @@ class MemberPortalTest extends TestCase
             'association_id' => $association->id,
             'name' => 'Yuran Tahunan',
             'amount' => 120.00,
+            'frequency' => 'yearly',
             'due_day' => null,
             'is_active' => true,
         ]);
@@ -69,6 +70,44 @@ class MemberPortalTest extends TestCase
         $this->actingAs($user)->get('/member/activities')->assertOk();
         $this->actingAs($user)->get('/member/attendances')->assertOk();
         $this->actingAs($user)->get('/member/announcements')->assertOk();
+    }
+
+    public function test_one_time_fee_is_shown_as_completed_after_payment(): void
+    {
+        $user = User::factory()->create();
+        $user->assignRole('ahli');
+
+        $association = Association::create(['name' => 'Persatuan One Time', 'code' => 'POT-001']);
+        $user->associations()->attach($association->id, [
+            'membership_no' => 'AHLI-OT-001',
+            'joined_at' => now()->toDateString(),
+            'is_active' => true,
+        ]);
+
+        $fee = Fee::create([
+            'association_id' => $association->id,
+            'name' => 'Yuran Pendaftaran',
+            'amount' => 50.00,
+            'frequency' => 'one_time',
+            'due_day' => null,
+            'is_active' => true,
+        ]);
+
+        Payment::create([
+            'association_id' => $association->id,
+            'user_id' => $user->id,
+            'fee_id' => $fee->id,
+            'amount' => 50.00,
+            'status' => 'paid',
+            'paid_at' => now(),
+            'reference' => 'PAY-OT-001',
+        ]);
+
+        $this->actingAs($user)
+            ->get('/member/invoices')
+            ->assertOk()
+            ->assertSee('Sekali sahaja')
+            ->assertSee('Selesai');
     }
 
     public function test_member_can_switch_active_association_only_with_own_membership(): void

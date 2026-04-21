@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreFeeRequest;
 use App\Models\Fee;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class FeeController extends Controller
 {
@@ -25,7 +26,12 @@ class FeeController extends Controller
 
     public function store(StoreFeeRequest $request)
     {
-        $fee = Fee::create($request->validated());
+        $validated = $request->validated();
+        if (($validated['frequency'] ?? null) !== Fee::FREQUENCY_MONTHLY) {
+            $validated['due_day'] = null;
+        }
+
+        $fee = Fee::create($validated);
 
         return response()->json($fee, 201);
     }
@@ -44,9 +50,17 @@ class FeeController extends Controller
         $validated = $request->validate([
             'name' => ['sometimes', 'string', 'max:255'],
             'amount' => ['sometimes', 'numeric', 'min:0.01'],
+            'frequency' => ['sometimes', 'string', Rule::in([Fee::FREQUENCY_ONE_TIME, Fee::FREQUENCY_MONTHLY, Fee::FREQUENCY_YEARLY])],
             'due_day' => ['nullable', 'integer', 'between:1,31'],
             'is_active' => ['sometimes', 'boolean'],
         ]);
+
+        $effectiveFrequency = $validated['frequency'] ?? $fee->frequency;
+        if ($effectiveFrequency !== Fee::FREQUENCY_MONTHLY) {
+            $validated['due_day'] = null;
+        } elseif (! array_key_exists('due_day', $validated)) {
+            $validated['due_day'] = $fee->due_day;
+        }
 
         $fee->update($validated);
 

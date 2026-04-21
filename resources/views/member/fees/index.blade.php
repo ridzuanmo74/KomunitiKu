@@ -23,7 +23,7 @@
                     @forelse ($fees as $fee)
                         <tr>
                             <td class="px-4 py-2.5 text-gray-900">{{ $fee->name }}</td>
-                            <td class="px-4 py-2.5 text-gray-700">{{ $fee->due_day ? __('Bulanan') : __('Tahunan') }}</td>
+                            <td class="px-4 py-2.5 text-gray-700">{{ __($fee->frequencyLabel()) }}</td>
                             <td class="px-4 py-2.5 text-gray-700">RM {{ number_format((float) $fee->amount, 2) }}</td>
                             <td class="px-4 py-2.5 text-gray-700">{{ $fee->is_active ? __('Aktif') : __('Tidak Aktif') }}</td>
                         </tr>

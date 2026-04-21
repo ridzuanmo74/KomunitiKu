@@ -122,8 +122,12 @@ class MemberPortalService
                 return [
                     'fee_name' => $fee->name,
                     'amount' => $fee->amount,
-                    'frequency_label' => $fee->due_day ? 'Bulanan' : 'Tahunan',
-                    'period_label' => $fee->due_day ? now()->translatedFormat('F Y') : (string) now()->year,
+                    'frequency_label' => $fee->frequencyLabel(),
+                    'period_label' => match ($fee->frequency) {
+                        Fee::FREQUENCY_ONE_TIME => 'Sekali sahaja',
+                        Fee::FREQUENCY_MONTHLY => now()->translatedFormat('F Y'),
+                        default => (string) now()->year,
+                    },
                     'status' => $latestPayment?->status === 'paid' ? 'selesai' : 'belum bayar',
                     'reference' => $latestPayment?->reference,
                     'paid_at' => $latestPayment?->paid_at,

@@ -3,29 +3,25 @@
 namespace App\Http\Requests;
 
 use App\Models\Fee;
-use Illuminate\Support\Facades\Gate;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 
-class StoreFeeRequest extends FormRequest
+class CommitteeUpdateFeeRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
-        return Gate::allows('create', [Fee::class, (int) $this->integer('association_id')]);
+        $fee = $this->route('fee');
+
+        return $fee instanceof Fee && Gate::allows('update', $fee);
     }
 
     /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, ValidationRule|array<mixed>|string>
+     * @return array<string, mixed>
      */
     public function rules(): array
     {
         return [
-            'association_id' => ['required', 'integer', 'exists:associations,id'],
             'name' => ['required', 'string', 'max:255'],
             'amount' => ['required', 'numeric', 'min:0.01'],
             'frequency' => ['required', 'string', Rule::in([Fee::FREQUENCY_ONE_TIME, Fee::FREQUENCY_MONTHLY, Fee::FREQUENCY_YEARLY])],

@@ -98,6 +98,8 @@ class RbacAccessTest extends TestCase
                 'association_id' => $association->id,
                 'name' => 'Yuran Bulanan',
                 'amount' => 10.50,
+                'frequency' => 'monthly',
+                'due_day' => 15,
             ])
             ->assertForbidden();
     }
@@ -213,6 +215,7 @@ class RbacAccessTest extends TestCase
                 'association_id' => $association->id,
                 'name' => 'Yuran',
                 'amount' => 10.50,
+                'frequency' => 'yearly',
             ])
             ->assertForbidden();
     }
@@ -230,6 +233,8 @@ class RbacAccessTest extends TestCase
                 'association_id' => $association->id,
                 'name' => 'Yuran Bulanan',
                 'amount' => 25.00,
+                'frequency' => 'monthly',
+                'due_day' => 10,
             ])
             ->assertCreated();
 
@@ -271,6 +276,7 @@ class RbacAccessTest extends TestCase
                 'association_id' => $association->id,
                 'name' => 'Yuran',
                 'amount' => 10.00,
+                'frequency' => 'yearly',
             ])
             ->assertForbidden();
     }

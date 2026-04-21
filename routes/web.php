@@ -99,6 +99,9 @@ Route::middleware('auth')->group(function () {
         ->group(function () {
             Route::prefix('fees')->name('fees.')->group(function () {
                 Route::get('settings', [CommitteePortalController::class, 'feeSettings'])->name('settings');
+                Route::post('/', [CommitteePortalController::class, 'storeFee'])->name('store');
+                Route::patch('{fee}', [CommitteePortalController::class, 'updateFee'])->name('update');
+                Route::delete('{fee}', [CommitteePortalController::class, 'destroyFee'])->name('destroy');
                 Route::get('invoices/generate', [CommitteePortalController::class, 'generateInvoices'])->name('invoices.generate');
                 Route::get('payments/review', [CommitteePortalController::class, 'reviewPayments'])->name('payments.review');
                 Route::get('arrears', [CommitteePortalController::class, 'arrears'])->name('arrears');
