@@ -89,6 +89,21 @@ class User extends Authenticatable
         return $this->hasRole('ahli');
     }
 
+    public function canManageCommitteeMembership(): bool
+    {
+        return $this->hasAnyRole(['jawatankuasa', 'pengerusi', 'setiausaha']);
+    }
+
+    public function canAccessCommitteeFees(): bool
+    {
+        return $this->hasAnyRole(['jawatankuasa', 'bendahari']);
+    }
+
+    public function canManageCommitteeAnnouncements(): bool
+    {
+        return $this->hasAnyRole(['jawatankuasa', 'setiausaha']);
+    }
+
     public function belongsToAssociation(int $associationId): bool
     {
         return $this->associations()->where('associations.id', $associationId)->exists();

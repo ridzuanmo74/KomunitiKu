@@ -93,7 +93,7 @@
 
         <section id="peranan" class="mx-auto max-w-6xl px-4 py-14 sm:px-6 lg:px-8">
             <h2 class="text-2xl font-bold tracking-tight text-slate-900">Peranan Akses (RBAC)</h2>
-            <div class="mt-6 grid gap-4 lg:grid-cols-3">
+            <div class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 <div class="rounded-xl border border-slate-200 bg-white p-5">
                     <p class="text-sm font-semibold text-slate-900">super_admin</p>
                     <ul class="mt-2 list-disc space-y-1 pl-5 text-sm text-slate-600">
@@ -104,8 +104,25 @@
                 <div class="rounded-xl border border-slate-200 bg-white p-5">
                     <p class="text-sm font-semibold text-slate-900">jawatankuasa</p>
                     <ul class="mt-2 list-disc space-y-1 pl-5 text-sm text-slate-600">
-                        <li>Urus aktiviti dan pengumuman persatuan sendiri</li>
-                        <li>Tetapkan yuran persatuan sendiri</li>
+                        <li>Urus aktiviti, pengumuman, keahlian, dan yuran persatuan sendiri</li>
+                    </ul>
+                </div>
+                <div class="rounded-xl border border-slate-200 bg-white p-5">
+                    <p class="text-sm font-semibold text-slate-900">pengerusi</p>
+                    <ul class="mt-2 list-disc space-y-1 pl-5 text-sm text-slate-600">
+                        <li>Maklumat persatuan, senarai ahli, dan kelulusan permohonan keahlian</li>
+                    </ul>
+                </div>
+                <div class="rounded-xl border border-slate-200 bg-white p-5">
+                    <p class="text-sm font-semibold text-slate-900">setiausaha</p>
+                    <ul class="mt-2 list-disc space-y-1 pl-5 text-sm text-slate-600">
+                        <li>Skop pengerusi serta pengurusan pengumuman (API)</li>
+                    </ul>
+                </div>
+                <div class="rounded-xl border border-slate-200 bg-white p-5">
+                    <p class="text-sm font-semibold text-slate-900">bendahari</p>
+                    <ul class="mt-2 list-disc space-y-1 pl-5 text-sm text-slate-600">
+                        <li>Jenis yuran, invois, semakan bayaran, dan tunggakan</li>
                     </ul>
                 </div>
                 <div class="rounded-xl border border-slate-200 bg-white p-5">

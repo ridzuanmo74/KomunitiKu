@@ -18,7 +18,7 @@ class RbacSeeder extends Seeder
     {
         app(PermissionRegistrar::class)->forgetCachedPermissions();
 
-        $roles = ['super_admin', 'jawatankuasa', 'ahli'];
+        $roles = ['super_admin', 'jawatankuasa', 'ahli', 'pengerusi', 'setiausaha', 'bendahari'];
         foreach ($roles as $roleName) {
             Role::firstOrCreate(['name' => $roleName, 'guard_name' => 'web']);
         }
@@ -54,6 +54,33 @@ class RbacSeeder extends Seeder
         );
         $member->syncRoles(['ahli']);
         $member->associations()->syncWithoutDetaching([
+            $associationA->id => ['joined_at' => now()->toDateString(), 'is_active' => true],
+        ]);
+
+        $pengerusi = User::updateOrCreate(
+            ['email' => 'pengerusi@komunitiku.test'],
+            ['name' => 'Pengerusi A', 'password' => Hash::make('password')]
+        );
+        $pengerusi->syncRoles(['pengerusi']);
+        $pengerusi->associations()->syncWithoutDetaching([
+            $associationA->id => ['joined_at' => now()->toDateString(), 'is_active' => true],
+        ]);
+
+        $setiausaha = User::updateOrCreate(
+            ['email' => 'setiausaha@komunitiku.test'],
+            ['name' => 'Setiausaha A', 'password' => Hash::make('password')]
+        );
+        $setiausaha->syncRoles(['setiausaha']);
+        $setiausaha->associations()->syncWithoutDetaching([
+            $associationA->id => ['joined_at' => now()->toDateString(), 'is_active' => true],
+        ]);
+
+        $bendahari = User::updateOrCreate(
+            ['email' => 'bendahari@komunitiku.test'],
+            ['name' => 'Bendahari A', 'password' => Hash::make('password')]
+        );
+        $bendahari->syncRoles(['bendahari']);
+        $bendahari->associations()->syncWithoutDetaching([
             $associationA->id => ['joined_at' => now()->toDateString(), 'is_active' => true],
         ]);
     }

@@ -22,9 +22,9 @@ class MemberPortalTest extends TestCase
 
         app(PermissionRegistrar::class)->forgetCachedPermissions();
 
-        Role::firstOrCreate(['name' => 'super_admin', 'guard_name' => 'web']);
-        Role::firstOrCreate(['name' => 'jawatankuasa', 'guard_name' => 'web']);
-        Role::firstOrCreate(['name' => 'ahli', 'guard_name' => 'web']);
+        foreach (['super_admin', 'jawatankuasa', 'ahli', 'pengerusi', 'setiausaha', 'bendahari'] as $name) {
+            Role::firstOrCreate(['name' => $name, 'guard_name' => 'web']);
+        }
 
         $this->seed(StateSeeder::class);
     }
@@ -133,6 +133,31 @@ class MemberPortalTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_super_admin_cannot_access_committee_membership_approvals_page(): void
+    {
+        $superAdmin = User::factory()->create();
+        $superAdmin->assignRole('super_admin');
+
+        Association::create(['name' => 'Persatuan Approvals', 'code' => 'PA-APR']);
+
+        $this->actingAs($superAdmin)
+            ->get('/committee/associations/approvals')
+            ->assertForbidden();
+    }
+
+    public function test_jawatankuasa_can_access_committee_membership_approvals_page(): void
+    {
+        $committee = User::factory()->create();
+        $committee->assignRole('jawatankuasa');
+
+        $association = Association::create(['name' => 'Persatuan H', 'code' => 'PH-001']);
+        $committee->associations()->attach($association->id);
+
+        $this->actingAs($committee)
+            ->get('/committee/associations/approvals')
+            ->assertOk();
+    }
+
     public function test_jawatankuasa_can_access_committee_fee_pages(): void
     {
         $committee = User::factory()->create();
@@ -164,5 +189,42 @@ class MemberPortalTest extends TestCase
         $this->actingAs($committee)
             ->get('/committee/associations/info')
             ->assertOk();
+    }
+
+    public function test_pengerusi_can_access_committee_membership_routes(): void
+    {
+        $user = User::factory()->create();
+        $user->assignRole('pengerusi');
+
+        $association = Association::create(['name' => 'Persatuan P', 'code' => 'PP-001']);
+        $user->associations()->attach($association->id);
+
+        $this->actingAs($user)->get('/committee/associations/info')->assertOk();
+        $this->actingAs($user)->get('/committee/associations/approvals')->assertOk();
+        $this->actingAs($user)->get('/committee/fees/settings')->assertForbidden();
+    }
+
+    public function test_bendahari_can_access_committee_fee_pages_but_not_association_info(): void
+    {
+        $user = User::factory()->create();
+        $user->assignRole('bendahari');
+
+        $association = Association::create(['name' => 'Persatuan Bdh', 'code' => 'PBH-001']);
+        $user->associations()->attach($association->id);
+
+        $this->actingAs($user)->get('/committee/fees/settings')->assertOk();
+        $this->actingAs($user)->get('/committee/associations/info')->assertForbidden();
+    }
+
+    public function test_setiausaha_can_access_committee_membership_routes(): void
+    {
+        $user = User::factory()->create();
+        $user->assignRole('setiausaha');
+
+        $association = Association::create(['name' => 'Persatuan S', 'code' => 'PS-001']);
+        $user->associations()->attach($association->id);
+
+        $this->actingAs($user)->get('/committee/associations/info')->assertOk();
+        $this->actingAs($user)->get('/committee/associations/approvals')->assertOk();
     }
 }

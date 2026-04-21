@@ -38,6 +38,13 @@ return [
                     'route' => 'member.membership.applications',
                     'route_is' => 'member.membership.applications',
                 ],
+                [
+                    'type' => 'link',
+                    'label' => 'Kelulusan Keahlian',
+                    'route' => 'committee.associations.approvals',
+                    'route_is' => 'committee.associations.approvals',
+                    'visible' => fn ($user) => $user && $user->canManageCommitteeMembership() && ! $user->isSuperAdmin(),
+                ],
             ],
         ],
         [
@@ -116,7 +123,7 @@ return [
             'type' => 'group',
             'id' => 'pengurusan-persatuan',
             'label' => 'Pengurusan Persatuan',
-            'visible' => fn ($user) => $user && ($user->isSuperAdmin() || $user->isJawatankuasa()),
+            'visible' => fn ($user) => $user && ($user->isSuperAdmin() || $user->canManageCommitteeMembership()),
             'children' => [
                 [
                     'type' => 'link',
@@ -131,25 +138,13 @@ return [
                     'route_is' => 'committee.associations.create',
                     'visible' => fn ($user) => $user && $user->isSuperAdmin(),
                 ],
-                [
-                    'type' => 'link',
-                    'label' => 'Ahli Persatuan',
-                    'route' => 'committee.associations.members',
-                    'route_is' => 'committee.associations.members',
-                ],
-                [
-                    'type' => 'link',
-                    'label' => 'Kelulusan Keahlian',
-                    'route' => 'committee.associations.approvals',
-                    'route_is' => 'committee.associations.approvals',
-                ],
             ],
         ],
         [
             'type' => 'group',
             'id' => 'pengurusan-yuran',
             'label' => 'Pengurusan Yuran',
-            'visible' => fn ($user) => $user && $user->isJawatankuasa(),
+            'visible' => fn ($user) => $user && $user->canAccessCommitteeFees(),
             'children' => [
                 [
                     'type' => 'link',

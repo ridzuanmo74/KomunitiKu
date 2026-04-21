@@ -18,7 +18,7 @@ class AssociationPolicy
             return true;
         }
 
-        return $user->isJawatankuasa() && $user->belongsToAssociation($association->id);
+        return $user->canManageCommitteeMembership() && $user->belongsToAssociation($association->id);
     }
 
     public function manageMembers(User $user, Association $association): bool

@@ -9,7 +9,7 @@ class AnnouncementPolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->hasAnyRole(['super_admin', 'jawatankuasa', 'ahli']);
+        return $user->hasAnyRole(['super_admin', 'jawatankuasa', 'pengerusi', 'setiausaha', 'ahli']);
     }
 
     public function view(User $user, Announcement $announcement): bool
@@ -23,7 +23,7 @@ class AnnouncementPolicy
             return true;
         }
 
-        return $user->isJawatankuasa() && $user->belongsToAssociation($associationId);
+        return $user->canManageCommitteeAnnouncements() && $user->belongsToAssociation($associationId);
     }
 
     public function update(User $user, Announcement $announcement): bool
@@ -32,7 +32,7 @@ class AnnouncementPolicy
             return true;
         }
 
-        return $user->isJawatankuasa() && $user->belongsToAssociation($announcement->association_id);
+        return $user->canManageCommitteeAnnouncements() && $user->belongsToAssociation($announcement->association_id);
     }
 
     public function delete(User $user, Announcement $announcement): bool

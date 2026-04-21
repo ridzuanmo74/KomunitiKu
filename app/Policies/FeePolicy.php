@@ -9,7 +9,7 @@ class FeePolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->hasAnyRole(['super_admin', 'jawatankuasa', 'ahli']);
+        return $user->hasAnyRole(['super_admin', 'jawatankuasa', 'bendahari', 'ahli']);
     }
 
     public function view(User $user, Fee $fee): bool
@@ -23,7 +23,7 @@ class FeePolicy
             return true;
         }
 
-        return $user->isJawatankuasa() && $user->belongsToAssociation($associationId);
+        return $user->canAccessCommitteeFees() && $user->belongsToAssociation($associationId);
     }
 
     public function update(User $user, Fee $fee): bool
@@ -32,7 +32,7 @@ class FeePolicy
             return true;
         }
 
-        return $user->isJawatankuasa() && $user->belongsToAssociation($fee->association_id);
+        return $user->canAccessCommitteeFees() && $user->belongsToAssociation($fee->association_id);
     }
 
     public function delete(User $user, Fee $fee): bool

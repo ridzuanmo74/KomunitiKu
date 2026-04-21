@@ -21,7 +21,7 @@ class AssociationRegistryTest extends TestCase
 
         app(PermissionRegistrar::class)->forgetCachedPermissions();
 
-        foreach (['super_admin', 'jawatankuasa', 'ahli'] as $name) {
+        foreach (['super_admin', 'jawatankuasa', 'ahli', 'pengerusi', 'setiausaha', 'bendahari'] as $name) {
             Role::firstOrCreate(['name' => $name, 'guard_name' => 'web']);
         }
 

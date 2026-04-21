@@ -39,7 +39,7 @@ Route::middleware('auth')->group(function () {
         Route::apiResource('announcements', AnnouncementController::class)->only(['index', 'show']);
         Route::apiResource('fees', FeeController::class)->only(['index', 'show']);
 
-        Route::middleware('role:super_admin|jawatankuasa')->group(function () {
+        Route::middleware('role:super_admin|jawatankuasa|setiausaha|bendahari')->group(function () {
             Route::apiResource('activities', ActivityController::class)->only(['store', 'update', 'destroy']);
             Route::apiResource('announcements', AnnouncementController::class)->only(['store', 'update', 'destroy']);
             Route::apiResource('fees', FeeController::class)->only(['store', 'update', 'destroy']);
@@ -73,7 +73,7 @@ Route::middleware('auth')->group(function () {
             Route::get('announcements', [MemberPortalController::class, 'announcements'])->name('announcements.index');
         });
 
-    Route::middleware('role:super_admin|jawatankuasa')
+    Route::middleware('role:super_admin|jawatankuasa|pengerusi|setiausaha')
         ->prefix('committee')
         ->name('committee.')
         ->group(function () {
@@ -81,11 +81,19 @@ Route::middleware('auth')->group(function () {
                 Route::get('info', [CommitteePortalController::class, 'associationInfo'])->name('info');
                 Route::get('members', [CommitteePortalController::class, 'associationMembers'])->name('members');
                 Route::patch('members/{user}', [CommitteePortalController::class, 'updateAssociationMember'])->name('members.update');
+            });
+        });
+
+    Route::middleware('role:jawatankuasa|pengerusi|setiausaha')
+        ->prefix('committee')
+        ->name('committee.')
+        ->group(function () {
+            Route::prefix('associations')->name('associations.')->group(function () {
                 Route::get('approvals', [CommitteePortalController::class, 'associationApprovals'])->name('approvals');
             });
         });
 
-    Route::middleware('role:jawatankuasa')
+    Route::middleware('role:jawatankuasa|bendahari')
         ->prefix('committee')
         ->name('committee.')
         ->group(function () {

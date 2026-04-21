@@ -20,9 +20,9 @@ class RbacAccessTest extends TestCase
 
         app(PermissionRegistrar::class)->forgetCachedPermissions();
 
-        Role::firstOrCreate(['name' => 'super_admin', 'guard_name' => 'web']);
-        Role::firstOrCreate(['name' => 'jawatankuasa', 'guard_name' => 'web']);
-        Role::firstOrCreate(['name' => 'ahli', 'guard_name' => 'web']);
+        foreach (['super_admin', 'jawatankuasa', 'ahli', 'pengerusi', 'setiausaha', 'bendahari'] as $name) {
+            Role::firstOrCreate(['name' => $name, 'guard_name' => 'web']);
+        }
     }
 
     public function test_super_admin_can_manage_activity_across_associations(): void
@@ -180,6 +180,97 @@ class RbacAccessTest extends TestCase
                 'association_id' => $association->id,
                 'amount' => 10.00,
                 'reference' => 'PAY-SA',
+            ])
+            ->assertForbidden();
+    }
+
+    public function test_setiausaha_can_create_announcement_but_not_activity_or_fee(): void
+    {
+        $user = User::factory()->create();
+        $user->assignRole('setiausaha');
+
+        $association = Association::create(['name' => 'A', 'code' => 'A-SET']);
+        $user->associations()->attach($association->id);
+
+        $this->actingAs($user)
+            ->postJson('/rbac/announcements', [
+                'association_id' => $association->id,
+                'title' => 'Hebahan',
+                'content' => 'Kandungan',
+            ])
+            ->assertCreated();
+
+        $this->actingAs($user)
+            ->postJson('/rbac/activities', [
+                'association_id' => $association->id,
+                'title' => 'Program',
+                'activity_date' => now()->addDay()->toDateTimeString(),
+            ])
+            ->assertForbidden();
+
+        $this->actingAs($user)
+            ->postJson('/rbac/fees', [
+                'association_id' => $association->id,
+                'name' => 'Yuran',
+                'amount' => 10.50,
+            ])
+            ->assertForbidden();
+    }
+
+    public function test_bendahari_can_create_fee_but_not_activity_or_announcement(): void
+    {
+        $user = User::factory()->create();
+        $user->assignRole('bendahari');
+
+        $association = Association::create(['name' => 'A', 'code' => 'A-BDH']);
+        $user->associations()->attach($association->id);
+
+        $this->actingAs($user)
+            ->postJson('/rbac/fees', [
+                'association_id' => $association->id,
+                'name' => 'Yuran Bulanan',
+                'amount' => 25.00,
+            ])
+            ->assertCreated();
+
+        $this->actingAs($user)
+            ->postJson('/rbac/activities', [
+                'association_id' => $association->id,
+                'title' => 'Program',
+                'activity_date' => now()->addDay()->toDateTimeString(),
+            ])
+            ->assertForbidden();
+
+        $this->actingAs($user)
+            ->postJson('/rbac/announcements', [
+                'association_id' => $association->id,
+                'title' => 'Hebahan',
+                'content' => 'Kandungan',
+            ])
+            ->assertForbidden();
+    }
+
+    public function test_pengerusi_cannot_mutate_via_rbac_api(): void
+    {
+        $user = User::factory()->create();
+        $user->assignRole('pengerusi');
+
+        $association = Association::create(['name' => 'A', 'code' => 'A-PGR']);
+        $user->associations()->attach($association->id);
+
+        $this->actingAs($user)
+            ->postJson('/rbac/announcements', [
+                'association_id' => $association->id,
+                'title' => 'Hebahan',
+                'content' => 'Kandungan',
+            ])
+            ->assertForbidden();
+
+        $this->actingAs($user)
+            ->postJson('/rbac/fees', [
+                'association_id' => $association->id,
+                'name' => 'Yuran',
+                'amount' => 10.00,
             ])
             ->assertForbidden();
     }

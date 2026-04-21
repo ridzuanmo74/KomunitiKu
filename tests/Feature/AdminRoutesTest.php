@@ -18,7 +18,7 @@ class AdminRoutesTest extends TestCase
 
         app(PermissionRegistrar::class)->forgetCachedPermissions();
 
-        foreach (['super_admin', 'jawatankuasa', 'ahli'] as $name) {
+        foreach (['super_admin', 'jawatankuasa', 'ahli', 'pengerusi', 'setiausaha', 'bendahari'] as $name) {
             Role::firstOrCreate(['name' => $name, 'guard_name' => 'web']);
         }
     }
@@ -62,6 +62,18 @@ class AdminRoutesTest extends TestCase
             ->assertOk()
             ->assertDontSee(__('Administration'), false)
             ->assertSee(__('Pengurusan Yuran'), false);
+    }
+
+    public function test_bendahari_dashboard_shows_fee_management_not_association_management(): void
+    {
+        $user = User::factory()->create();
+        $user->assignRole('bendahari');
+
+        $this->actingAs($user)
+            ->get(route('dashboard'))
+            ->assertOk()
+            ->assertSee(__('Pengurusan Yuran'), false)
+            ->assertDontSee(__('Pengurusan Persatuan'), false);
     }
 
     public function test_jawatankuasa_cannot_access_admin_routes(): void
