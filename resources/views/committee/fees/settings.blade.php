@@ -11,17 +11,6 @@
         </div>
     @endif
 
-    @if ($errors->any())
-        <div class="mb-4 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
-            <p class="font-semibold">{{ __('Sila semak maklumat yuran.') }}</p>
-            <ul class="mt-2 list-disc pl-5">
-                @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-        </div>
-    @endif
-
     <div class="kk-card overflow-hidden p-0">
         <div class="flex items-center justify-between border-b border-kk-border px-4 py-3 text-sm text-kk-sidebar-text">
             <span>{{ __('Persatuan') }}: {{ $association?->name ?: __('Tiada') }}</span>
@@ -102,10 +91,20 @@
                 <div>
                     <label for="create-name" class="mb-1 block text-sm font-medium text-gray-700">{{ __('Nama Yuran') }}</label>
                     <input id="create-name" name="name" type="text" value="{{ old('name') }}" required data-autofocus class="w-full rounded-md border-kk-border text-sm shadow-sm focus:border-kk-accent focus:ring-kk-accent/30" />
+                    @if (old('form_context') !== 'edit')
+                        @error('name')
+                            <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                        @enderror
+                    @endif
                 </div>
                 <div>
                     <label for="create-amount" class="mb-1 block text-sm font-medium text-gray-700">{{ __('Amaun (RM)') }}</label>
-                    <input id="create-amount" name="amount" type="number" min="0.01" step="0.01" value="{{ old('amount') }}" required class="w-full rounded-md border-kk-border text-sm shadow-sm focus:border-kk-accent focus:ring-kk-accent/30" />
+                    <input id="create-amount" name="amount" type="number" min="1" step="0.01" value="{{ old('amount') }}" required class="w-full rounded-md border-kk-border text-sm shadow-sm focus:border-kk-accent focus:ring-kk-accent/30" />
+                    @if (old('form_context') !== 'edit')
+                        @error('amount')
+                            <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                        @enderror
+                    @endif
                 </div>
                 <div>
                     <label for="create-frequency" class="mb-1 block text-sm font-medium text-gray-700">{{ __('Kekerapan') }}</label>
@@ -114,10 +113,20 @@
                         <option value="monthly" @selected(old('frequency') === 'monthly')>{{ __('Bulanan') }}</option>
                         <option value="yearly" @selected(old('frequency', 'yearly') === 'yearly')>{{ __('Tahunan') }}</option>
                     </select>
+                    @if (old('form_context') !== 'edit')
+                        @error('frequency')
+                            <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                        @enderror
+                    @endif
                 </div>
                 <div data-due-day-wrapper>
                     <label for="create-due-day" class="mb-1 block text-sm font-medium text-gray-700">{{ __('Hari Jatuh Tempo (1-31)') }}</label>
                     <input id="create-due-day" name="due_day" type="number" min="1" max="31" value="{{ old('due_day') }}" class="w-full rounded-md border-kk-border text-sm shadow-sm focus:border-kk-accent focus:ring-kk-accent/30" />
+                    @if (old('form_context') !== 'edit')
+                        @error('due_day')
+                            <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                        @enderror
+                    @endif
                 </div>
                 <div>
                     <label for="create-is-active" class="mb-1 block text-sm font-medium text-gray-700">{{ __('Status') }}</label>
@@ -125,6 +134,11 @@
                         <option value="1" @selected(old('is_active', '1') === '1')>{{ __('Aktif') }}</option>
                         <option value="0" @selected(old('is_active') === '0')>{{ __('Tidak Aktif') }}</option>
                     </select>
+                    @if (old('form_context') !== 'edit')
+                        @error('is_active')
+                            <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                        @enderror
+                    @endif
                 </div>
                 <div class="md:col-span-2 flex justify-end gap-2">
                     <button type="button" data-close-modal class="rounded-md border border-kk-border bg-kk-surface-muted px-4 py-2 text-sm font-semibold text-kk-sidebar-text hover:bg-kk-sidebar-hover">{{ __('Batal') }}</button>
@@ -135,6 +149,10 @@
     </div>
 
     @foreach ($fees as $fee)
+        @php
+            $isEditingFeeWithErrors = old('form_context') === 'edit'
+                && (string) old('editing_fee_id') === (string) $fee->id;
+        @endphp
         <div id="edit-fee-modal-{{ $fee->id }}" data-modal class="fixed inset-0 z-50 hidden items-center justify-center p-4">
             <div class="kk-modal-backdrop fixed inset-0" data-close-modal></div>
             <div class="kk-modal-surface relative w-full max-w-3xl overflow-hidden">
@@ -150,10 +168,20 @@
                     <div>
                         <label for="edit-name-{{ $fee->id }}" class="mb-1 block text-sm font-medium text-gray-700">{{ __('Nama Yuran') }}</label>
                         <input id="edit-name-{{ $fee->id }}" name="name" type="text" value="{{ old('name', $fee->name) }}" required data-autofocus class="w-full rounded-md border-kk-border text-sm shadow-sm focus:border-kk-accent focus:ring-kk-accent/30" />
+                        @if ($isEditingFeeWithErrors)
+                            @error('name')
+                                <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                            @enderror
+                        @endif
                     </div>
                     <div>
                         <label for="edit-amount-{{ $fee->id }}" class="mb-1 block text-sm font-medium text-gray-700">{{ __('Amaun (RM)') }}</label>
-                        <input id="edit-amount-{{ $fee->id }}" name="amount" type="number" min="0.01" step="0.01" value="{{ old('amount', (float) $fee->amount) }}" required class="w-full rounded-md border-kk-border text-sm shadow-sm focus:border-kk-accent focus:ring-kk-accent/30" />
+                        <input id="edit-amount-{{ $fee->id }}" name="amount" type="number" min="1" step="0.01" value="{{ old('amount', (float) $fee->amount) }}" required class="w-full rounded-md border-kk-border text-sm shadow-sm focus:border-kk-accent focus:ring-kk-accent/30" />
+                        @if ($isEditingFeeWithErrors)
+                            @error('amount')
+                                <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                            @enderror
+                        @endif
                     </div>
                     <div>
                         <label for="edit-frequency-{{ $fee->id }}" class="mb-1 block text-sm font-medium text-gray-700">{{ __('Kekerapan') }}</label>
@@ -162,10 +190,20 @@
                             <option value="monthly" @selected((string) old('frequency', $fee->frequency) === 'monthly')>{{ __('Bulanan') }}</option>
                             <option value="yearly" @selected((string) old('frequency', $fee->frequency) === 'yearly')>{{ __('Tahunan') }}</option>
                         </select>
+                        @if ($isEditingFeeWithErrors)
+                            @error('frequency')
+                                <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                            @enderror
+                        @endif
                     </div>
                     <div data-due-day-wrapper>
                         <label for="edit-due-day-{{ $fee->id }}" class="mb-1 block text-sm font-medium text-gray-700">{{ __('Hari Jatuh Tempo (1-31)') }}</label>
                         <input id="edit-due-day-{{ $fee->id }}" name="due_day" type="number" min="1" max="31" value="{{ old('due_day', $fee->due_day) }}" class="w-full rounded-md border-kk-border text-sm shadow-sm focus:border-kk-accent focus:ring-kk-accent/30" />
+                        @if ($isEditingFeeWithErrors)
+                            @error('due_day')
+                                <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                            @enderror
+                        @endif
                     </div>
                     <div>
                         <label for="edit-is-active-{{ $fee->id }}" class="mb-1 block text-sm font-medium text-gray-700">{{ __('Status') }}</label>
@@ -173,6 +211,11 @@
                             <option value="1" @selected((string) old('is_active', $fee->is_active ? '1' : '0') === '1')>{{ __('Aktif') }}</option>
                             <option value="0" @selected((string) old('is_active', $fee->is_active ? '1' : '0') === '0')>{{ __('Tidak Aktif') }}</option>
                         </select>
+                        @if ($isEditingFeeWithErrors)
+                            @error('is_active')
+                                <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                            @enderror
+                        @endif
                     </div>
                     <div class="md:col-span-2 flex justify-end gap-2">
                         <button type="button" data-close-modal class="rounded-md border border-kk-border bg-kk-surface-muted px-4 py-2 text-sm font-semibold text-kk-sidebar-text hover:bg-kk-sidebar-hover">{{ __('Batal') }}</button>

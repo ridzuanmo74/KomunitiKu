@@ -143,7 +143,7 @@ class CommitteeFeeCrudTest extends TestCase
             ->from('/committee/fees/settings')
             ->post('/committee/fees', [
                 'name' => '',
-                'amount' => '0',
+                'amount' => '0.99',
                 'frequency' => 'monthly',
                 'due_day' => '',
             ])
@@ -154,12 +154,132 @@ class CommitteeFeeCrudTest extends TestCase
             ->from('/committee/fees/settings')
             ->post('/committee/fees', [
                 'name' => 'Yuran Tahunan',
-                'amount' => '120.00',
+                'amount' => '1.00',
                 'frequency' => 'yearly',
                 'due_day' => 10,
             ])
             ->assertRedirect('/committee/fees/settings')
             ->assertSessionHasNoErrors();
+    }
+
+    public function test_fee_name_must_be_unique_within_same_association(): void
+    {
+        $user = User::factory()->create();
+        $user->assignRole('bendahari');
+
+        $association = Association::create(['name' => 'Persatuan Unik', 'code' => 'PU-CRUD']);
+        $user->associations()->attach($association->id);
+
+        Fee::create([
+            'association_id' => $association->id,
+            'name' => 'Yuran Komitmen',
+            'amount' => 25.00,
+            'frequency' => 'monthly',
+            'due_day' => 7,
+            'is_active' => true,
+        ]);
+
+        $this->actingAs($user)
+            ->from('/committee/fees/settings')
+            ->post('/committee/fees', [
+                'name' => 'Yuran Komitmen',
+                'amount' => '30.00',
+                'frequency' => 'monthly',
+                'due_day' => 9,
+                'is_active' => 1,
+                'form_context' => 'create',
+            ])
+            ->assertRedirect('/committee/fees/settings')
+            ->assertSessionHasErrors(['name'])
+            ->assertSessionHasInput('form_context', 'create');
+
+        $this->assertSame(
+            1,
+            Fee::query()
+                ->where('association_id', $association->id)
+                ->where('name', 'Yuran Komitmen')
+                ->count()
+        );
+    }
+
+    public function test_fee_name_can_repeat_across_different_associations(): void
+    {
+        $user = User::factory()->create();
+        $user->assignRole('bendahari');
+
+        $associationA = Association::create(['name' => 'Persatuan Satu', 'code' => 'PS-CRUD']);
+        $associationB = Association::create(['name' => 'Persatuan Dua', 'code' => 'PD-CRUD']);
+        $user->associations()->attach($associationA->id);
+
+        Fee::create([
+            'association_id' => $associationB->id,
+            'name' => 'Yuran Standard',
+            'amount' => 40.00,
+            'frequency' => 'yearly',
+            'due_day' => null,
+            'is_active' => true,
+        ]);
+
+        $this->actingAs($user)
+            ->from('/committee/fees/settings')
+            ->post('/committee/fees', [
+                'name' => 'Yuran Standard',
+                'amount' => '15.00',
+                'frequency' => 'monthly',
+                'due_day' => 12,
+                'is_active' => 1,
+            ])
+            ->assertRedirect('/committee/fees/settings')
+            ->assertSessionHasNoErrors();
+
+        $this->assertDatabaseHas('fees', [
+            'association_id' => $associationA->id,
+            'name' => 'Yuran Standard',
+            'amount' => '15.00',
+        ]);
+    }
+
+    public function test_fee_update_duplicate_name_redirects_back_with_edit_modal_context(): void
+    {
+        $user = User::factory()->create();
+        $user->assignRole('bendahari');
+
+        $association = Association::create(['name' => 'Persatuan Kemaskini', 'code' => 'PK-CRUD']);
+        $user->associations()->attach($association->id);
+
+        $existingFee = Fee::create([
+            'association_id' => $association->id,
+            'name' => 'Yuran Asal',
+            'amount' => 25.00,
+            'frequency' => 'yearly',
+            'due_day' => null,
+            'is_active' => true,
+        ]);
+
+        $editableFee = Fee::create([
+            'association_id' => $association->id,
+            'name' => 'Yuran Kedua',
+            'amount' => 35.00,
+            'frequency' => 'monthly',
+            'due_day' => 5,
+            'is_active' => true,
+        ]);
+
+        $this->actingAs($user)
+            ->from('/committee/fees/settings')
+            ->patch("/committee/fees/{$editableFee->id}", [
+                'name' => $existingFee->name,
+                'amount' => '35.00',
+                'frequency' => 'monthly',
+                'due_day' => 5,
+                'is_active' => 1,
+                'form_context' => 'edit',
+                'editing_fee_id' => (string) $editableFee->id,
+            ])
+            ->assertRedirect('/committee/fees/settings')
+            ->assertSessionHasErrors(['name'])
+            ->assertSessionHasInput('form_context', 'edit')
+            ->assertSessionHasInput('editing_fee_id', (string) $editableFee->id);
     }
 
     public function test_member_role_cannot_access_committee_fee_crud_endpoints(): void
